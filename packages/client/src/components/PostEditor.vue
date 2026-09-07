@@ -23,6 +23,7 @@ type Item = {
 };
 
 const picker = ref<HTMLInputElement | null>(null);
+const camera = ref<HTMLInputElement | null>(null);
 const items = ref<Item[]>([]);
 /** Photos dropped from an existing post — deleted server-side on save, not before. */
 const removed = ref<number[]>([]);
@@ -66,7 +67,11 @@ watch(() => props.post?.id, reset, { immediate: true });
 function add(event: Event) {
   const input = event.target as HTMLInputElement;
   for (const file of input.files ?? []) {
-    items.value.push({ file, id: crypto.randomUUID(), url: URL.createObjectURL(file) });
+    items.value.push({
+      file,
+      id: crypto.randomUUID(),
+      url: URL.createObjectURL(file),
+    });
   }
   // Reset so picking the same file twice in a row still fires a change event.
   input.value = "";
@@ -102,7 +107,9 @@ async function submit() {
       is_private: isPrivate.value,
       post_date: postDate.value,
     };
-    const files = items.value.map((item) => item.file).filter((file) => file !== undefined);
+    const files = items.value
+      .map((item) => item.file)
+      .filter((file) => file !== undefined);
     const { failed, id } = props.post
       ? await savePost(props.post, draft, files, removed.value)
       : await createPost(draft, files);
@@ -136,21 +143,44 @@ onBeforeUnmount(revokePicked);
       multiple
       @change="add"
     />
+    <input
+      ref="camera"
+      class="compose__picker"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      @change="add"
+    />
 
-    <button
-      v-if="items.length === 0"
-      class="button compose__empty"
-      type="button"
-      @click="picker?.click()"
-    >
-      <AppIcon name="image" :size="28" />
-      Add photos
-    </button>
+    <div v-if="items.length === 0" class="compose__empty-choices">
+      <button
+        class="button compose__empty"
+        type="button"
+        @click="camera?.click()"
+      >
+        <AppIcon name="camera" :size="28" />
+        Take photo
+      </button>
+      <button
+        class="button compose__empty"
+        type="button"
+        @click="picker?.click()"
+      >
+        <AppIcon name="image" :size="28" />
+        Choose from library
+      </button>
+    </div>
 
     <template v-else>
       <PhotoCarousel v-model:index="index" :images="items">
         <template #overlay="{ index: slide }">
-          <button class="compose__remove button" type="button" @click="remove(slide)">Remove</button>
+          <button
+            class="compose__remove button"
+            type="button"
+            @click="remove(slide)"
+          >
+            Remove
+          </button>
         </template>
       </PhotoCarousel>
 
@@ -181,7 +211,7 @@ onBeforeUnmount(revokePicked);
 
     <form class="compose__form" @submit.prevent="submit">
       <label class="field">
-        <span class="visually-hidden">Description</span>
+        <span class="muted">Description</span>
         <textarea
           v-model="body"
           rows="3"
@@ -194,12 +224,18 @@ onBeforeUnmount(revokePicked);
       <div class="field field--row">
         <label class="compose__date">
           <span class="muted">Date</span>
-          <input v-model="postDate" type="date" required />
+          <div  class="compose__date--row">
+            <input v-model="postDate" type="date" required />
+            <button
+              class="button"
+              type="button"
+              :disabled="!current?.file"
+              @click="useMetadataDate"
+            >
+              Use photo date
+            </button>
+          </div>
         </label>
-        <!-- Only a freshly picked file still has bytes here to read EXIF from. -->
-        <button class="button" type="button" :disabled="!current?.file" @click="useMetadataDate">
-          Use photo date
-        </button>
       </div>
 
       <label class="switch">
@@ -212,7 +248,14 @@ onBeforeUnmount(revokePicked);
       <p v-if="notice" class="muted">{{ notice }}</p>
 
       <div class="compose__buttons">
-        <button v-if="post" class="button" type="button" @click="emit('cancel')">Cancel</button>
+        <button
+          v-if="post"
+          class="button"
+          type="button"
+          @click="emit('cancel')"
+        >
+          Cancel
+        </button>
         <button
           class="button button-primary compose__submit"
           type="submit"
@@ -230,15 +273,20 @@ onBeforeUnmount(revokePicked);
   display: none;
 }
 
+.compose__empty-choices {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+
 .compose__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  width: 100%;
-  margin: var(--space-5) 0;
-  padding: var(--space-5);
-  border-style: dashed;
+  flex: 1;
+  padding: var(--space-5) var(--space-2);
+  text-align: center;
 }
 
 .compose__remove {
@@ -290,7 +338,7 @@ onBeforeUnmount(revokePicked);
 .compose__form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .field textarea,
@@ -302,23 +350,29 @@ onBeforeUnmount(revokePicked);
   background: var(--color-bg);
 }
 
+.compose__date {
+  width: 100%;
+}
+
+.compose__date--row {
+  width: 100%;
+  display: flex;
+  gap: var(--space-3);
+}
+
 .field--row {
   display: flex;
   gap: var(--space-3);
   align-items: end;
 }
 
-.compose__date {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  flex: 1;
-}
-
 .switch {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  /* The form is a column flex container, so a label stretches to the full row and makes
+     the whole width a click target. Shrink it back to its content. */
+  align-self: start;
 }
 
 .switch input {
@@ -369,6 +423,7 @@ onBeforeUnmount(revokePicked);
 .compose__buttons {
   display: flex;
   gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
 .compose__submit {

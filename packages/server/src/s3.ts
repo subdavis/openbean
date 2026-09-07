@@ -5,6 +5,13 @@ type S3Env = Pick<
   "S3_ENDPOINT" | "S3_BUCKET" | "S3_REGION" | "S3_ACCESS_KEY_ID" | "S3_SECRET_ACCESS_KEY"
 >;
 
+/**
+ * How long a read URL stays byte-identical, and so how long the browser keeps the photo.
+ * It is also the revocation lag: a leaked URL works for up to this plus the ttl, because
+ * nothing invalidates one already handed out. SigV4 caps window + ttl at 7 days.
+ */
+export const READ_WINDOW = 86_400;
+
 const hex = (b: ArrayBuffer) =>
   [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 
@@ -51,10 +58,21 @@ export function s3(env: S3Env) {
     return key;
   }
 
-  async function presign(method: string, storageKey: string, expiresIn: number): Promise<string> {
+  async function presign(
+    method: string,
+    storageKey: string,
+    expiresIn: number,
+    window = 0,
+  ): Promise<string> {
     const path = storageKey.split("/").map(encodeSegment).join("/");
     const url = new URL(`${endpoint}/${bucket}/${path}`);
-    const amzDate = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    // A presigned URL is the <img src>, so it has to come back byte-identical between
+    // requests or the browser refetches every photo on every navigation. Flooring the
+    // signing time to a `window` makes it so; expiry covers the window plus the ttl, so
+    // even a URL first handed out at the end of a window still has `expiresIn` left.
+    const ms = Date.now();
+    const signedAt = window ? ms - (ms % (window * 1000)) : ms;
+    const amzDate = new Date(signedAt).toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
     const dateStamp = amzDate.slice(0, 8);
     const scope = `${dateStamp}/${region}/s3/aws4_request`;
 
@@ -62,7 +80,7 @@ export function s3(env: S3Env) {
       "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
       "X-Amz-Credential": `${env.S3_ACCESS_KEY_ID}/${scope}`,
       "X-Amz-Date": amzDate,
-      "X-Amz-Expires": String(expiresIn),
+      "X-Amz-Expires": String(expiresIn + window),
       "X-Amz-SignedHeaders": "host",
     });
     query.sort();
@@ -90,7 +108,7 @@ export function s3(env: S3Env) {
         console.error("s3 delete failed", storageKey, res.status, await res.text());
       }
     },
-    readUrl: (storageKey: string, ttl = 3600) => presign("GET", storageKey, ttl),
+    readUrl: (storageKey: string, ttl = 3600) => presign("GET", storageKey, ttl, READ_WINDOW),
     uploadUrl: (storageKey: string, ttl = 600) => presign("PUT", storageKey, ttl),
   };
 }

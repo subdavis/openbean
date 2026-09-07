@@ -6,7 +6,7 @@
       "https://beans.subdavis.com"
     ],
     "method": ["GET", "PUT"],
-    "responseHeader": ["Content-Type"],
+    "responseHeader": ["Content-Type", "Cache-Control"],
     "maxAgeSeconds": 3600
   }
 ]

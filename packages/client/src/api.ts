@@ -23,7 +23,9 @@ export const api = {
 export async function uploadToBucket(url: string, body: Blob) {
   const res = await fetch(url, {
     body,
-    headers: { "Content-Type": body.type },
+    // Stored as object metadata and echoed on every read, so the browser keeps the photo
+    // instead of refetching it each time the feed re-renders. Photo keys are immutable.
+    headers: { "Cache-Control": "public, max-age=31536000, immutable", "Content-Type": body.type },
     method: "PUT",
   });
   if (!res.ok) throw new Error(`Upload failed: ${res.status}`);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { ago, day } from "../format.ts";
 import type { CachedPost } from "../stores/posts.ts";
 import { toggleLike } from "../stores/posts.ts";
@@ -13,7 +13,7 @@ const props = defineProps<{
   detail?: boolean;
   showEdit?: boolean;
 }>();
-const emit = defineEmits<{ open: []; edit: [] }>();
+const emit = defineEmits<{ open: []; edit: []; delete: [] }>();
 
 /** In the feed the whole card opens the post. Bound as a group so the modal's copy
  *  gets none of it — no role, no tab stop, no handlers. */
@@ -47,12 +47,19 @@ const images = computed(() =>
 /** post_date is the day the photo is *about*; show it only when it isn't the day it went up. */
 const postedOn = computed(() => props.post.published_at?.slice(0, 10));
 const showDate = computed(() => props.post.post_date !== postedOn.value);
+
+const menu = ref<HTMLDetailsElement | null>(null);
+function closeMenuOutside(event: MouseEvent) {
+  if (menu.value?.open && !menu.value.contains(event.target as Node)) menu.value.open = false;
+}
+onMounted(() => document.addEventListener("click", closeMenuOutside));
+onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
 </script>
 
 <template>
   <article
     class="post"
-    :class="{ 'post--clickable': !detail }"
+    :class="{ 'post--clickable': !detail, 'post--detail': detail }"
     v-bind="cardAttrs"
   >
     <header class="post__header">
@@ -101,15 +108,24 @@ const showDate = computed(() => props.post.post_date !== postedOn.value);
         <span v-if="post.comment_count">{{ post.comment_count }}</span>
       </span>
 
-      <button
-        v-if="showEdit"
-        class="button-bare modal__edit"
-        type="button"
-        @click="emit('edit')"
-      >
-        <AppIcon name="pencil" :size="20" />
-        Edit
-      </button>
+      <div style="flex: 1" />
+
+      <details v-if="showEdit" ref="menu" class="post__menu">
+        <summary class="button-bare post__action clickable" aria-label="Post options">
+          More
+          <AppIcon name="moreVertical" :size="20" />
+        </summary>
+        <div class="post__menu-panel">
+          <button class="button-bare post__menu-item" type="button" @click="emit('edit')">
+            <AppIcon name="pencil" :size="18" />
+            Edit
+          </button>
+          <button class="button-bare post__menu-item" type="button" @click="emit('delete')">
+            <AppIcon name="trash" :size="18" />
+            Delete
+          </button>
+        </div>
+      </details>
     </footer>
   </article>
 </template>
@@ -121,6 +137,14 @@ const showDate = computed(() => props.post.post_date !== postedOn.value);
   content-visibility: auto;
   contain-intrinsic-size: auto 400px;
   border-radius: var(--radius);
+}
+
+/* The modal only ever shows one post, so there's nothing to skip rendering for —
+   and the containment that skip needs also traps the post menu's dropdown behind
+   whatever comes after it (comments, composer). */
+.post--detail {
+  content-visibility: visible;
+  contain: none;
 }
 
 .post__header {
@@ -162,7 +186,7 @@ const showDate = computed(() => props.post.post_date !== postedOn.value);
   margin: var(--space-4);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 1.25rem;
+  font-size: var(--font-size-lg);
 }
 
 .post__actions {
@@ -175,9 +199,42 @@ const showDate = computed(() => props.post.post_date !== postedOn.value);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  line-height: 1;
 }
 
 .post__action--liked {
   color: var(--color-like);
+}
+
+.post__menu {
+  position: relative;
+}
+
+.post__menu > summary {
+  list-style: none;
+}
+
+.post__menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.post__menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 9em;
+  padding: var(--space-2);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+}
+
+.post__menu-item {
+  justify-content: flex-start;
+  padding: var(--space-2);
 }
 </style>

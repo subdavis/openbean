@@ -6,6 +6,10 @@ export const ICONS = {
     "M8 2v4",
     "M4 10h16",
   ],
+  camera: [
+    "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z",
+    "M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  ],
   chevronLeft: ["M15 18l-6-6 6-6"],
   chevronRight: ["M9 18l6-6-6-6"],
   close: ["M18 6 6 18", "M6 6l12 12"],
@@ -17,6 +21,8 @@ export const ICONS = {
   ],
   home: ["M3 9.5 12 3l9 6.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", "M9 22V12h6v10"],
   image: ["M3 5h18v14H3z", "M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z", "M21 16l-5-5-6 6"],
+  moreVertical: ["M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z", "M12 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2z", "M12 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"],
+  trash: ["M3 6h18", "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6z"],
   pencil: ["M4 20h4L20 8a2.8 2.8 0 0 0-4-4L4 16z", "M14 6l4 4"],
   plus: ["M12 5v14", "M5 12h14"],
   /** Typographic quotation mark — tapered tails, so use it `filled`, not stroked. */

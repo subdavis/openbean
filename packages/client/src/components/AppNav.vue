@@ -41,7 +41,10 @@ const items: { icon: IconName; label: string; name: string; to: string }[] = [
   margin: 0 auto;
   border-top: var(--border);
   background: var(--color-bg);
-  padding-bottom: var(--safe-bottom);
+  /* Eats 30% of the bar's own height back out of the safe-area clearance, so the bar
+     rides a bit lower into the home-indicator bezel instead of floating clear above it.
+     Clamped to 0 so devices with little or no safe-area-inset-bottom are unaffected. */
+  padding-bottom: max(0px, calc(var(--safe-bottom) - var(--nav-height) * 0.3));
   /* Landscape puts the notch in one margin and a rounded corner in the other, either of
      which can swallow the outermost item. */
   padding-left: var(--safe-left);

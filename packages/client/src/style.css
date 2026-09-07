@@ -33,7 +33,7 @@
   --nav-height: 58px;
   --content-width: 580px;
   /* Apple's minimum comfortable touch target. */
-  --tap-target: 44px;
+  --tap-target: 38px;
 
   /* Zero on a desktop browser, so these are safe to use unconditionally. */
   --safe-top: env(safe-area-inset-top, 0px);
@@ -193,6 +193,10 @@ select,
   margin-top: -0.675em;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 /* Desktop: the bottom bar becomes a rail in the left margin. Three columns with equal
    `1fr` sides put the feed in the true centre of the viewport — centring a two-column
    nav+feed pair as one unit instead pushes the feed right of centre by half the rail.
@@ -237,6 +241,7 @@ select,
   background: var(--color-surface);
   padding: var(--space-2) var(--space-3);
   min-height: var(--tap-target);
+  white-space: nowrap;
 }
 
 /* Touch has no hover to preview a press with, so the press itself has to answer. Instant

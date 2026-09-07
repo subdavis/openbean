@@ -1,4 +1,4 @@
-import type { Comment, Post, PostDetail, PostView } from "@openbean/shared";
+import type { Comment, CommentView, Post, PostDetail, PostView } from "@openbean/shared";
 import { reactive } from "vue";
 import { api, uploadToBucket } from "../api.ts";
 import { prepare } from "../thumbnail.ts";
@@ -112,6 +112,15 @@ export async function fetchPost(id: number) {
   return cachePost(await api.get<PostDetail>(`/posts/${id}`));
 }
 
+export async function deletePost(id: number) {
+  await api.del(`/posts/${id}`);
+  cache.delete(id);
+  feed.ids = feed.ids.filter((postId) => postId !== id);
+  for (const [date, postId] of calendar.byDate) {
+    if (postId === id) calendar.byDate.delete(date);
+  }
+}
+
 export async function toggleLike(post: CachedPost) {
   const liked = !post.liked_by_me;
   post.liked_by_me = liked;
@@ -137,6 +146,27 @@ export async function addComment(post: CachedPost, body: string) {
     liked_by_me: false,
   });
   post.comment_count += 1;
+}
+
+export async function deleteComment(post: CachedPost, comment: CommentView) {
+  await api.del(`/comments/${comment.id}`);
+  post.comments = post.comments?.filter((c) => c.id !== comment.id);
+  post.comment_count -= 1;
+}
+
+export async function toggleCommentLike(comment: CommentView) {
+  const liked = !comment.liked_by_me;
+  comment.liked_by_me = liked;
+  comment.like_count += liked ? 1 : -1;
+  try {
+    await (liked
+      ? api.post(`/comments/${comment.id}/like`)
+      : api.del(`/comments/${comment.id}/like`));
+  } catch (err) {
+    comment.liked_by_me = !liked;
+    comment.like_count += liked ? -1 : 1;
+    throw err;
+  }
 }
 
 export type Draft = { body: string; post_date: string; is_private: boolean };

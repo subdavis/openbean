@@ -40,9 +40,12 @@ export default defineConfig({
         theme_color: "#ffffff",
       },
       registerType: "autoUpdate",
-      // The shell answers navigations, but /api belongs to the server: without this the
-      // worker serves index.html for the OAuth callback and no session is ever issued.
-      workbox: { navigateFallbackDenylist: [/^\/api\//] },
+      // Cloudflare's edge already does SPA fallback + /api routing (see wrangler.jsonc's
+      // run_worker_first). Letting the SW also own navigations via navigateFallback is
+      // redundant and fragile: if its precached index.html entry is ever stale/evicted
+      // (e.g. mid-deploy), the cache-bound NavigationRoute has nothing to fall back to and
+      // the page fails to load with ERR_FAILED until a hard refresh bypasses the SW.
+      workbox: { navigateFallback: undefined },
     }),
   ],
   server: {

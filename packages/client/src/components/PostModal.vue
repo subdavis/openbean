@@ -1,9 +1,17 @@
 <script setup lang="ts">
+import type { CommentView } from "@openbean/shared";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useScrollLock } from "../composables/scroll-lock.ts";
 import { ago } from "../format.ts";
-import { addComment, fetchPost, getPost } from "../stores/posts.ts";
+import {
+  addComment,
+  deleteComment,
+  deletePost,
+  fetchPost,
+  getPost,
+  toggleCommentLike,
+} from "../stores/posts.ts";
 import { currentUser, isAdmin as viewerIsAdmin } from "../stores/session.ts";
 import AppIcon from "./AppIcon.vue";
 import PostCard from "./PostCard.vue";
@@ -64,6 +72,29 @@ async function send() {
   }
 }
 
+async function remove() {
+  if (!post.value || !window.confirm("Delete this post? This can't be undone.")) return;
+  try {
+    await deletePost(post.value.id);
+    dialog.value?.close();
+  } catch (err) {
+    error.value = (err as Error).message;
+  }
+}
+
+/** Same rule as the server's canEdit: author or admin. */
+const commentEditable = (comment: { author_id: number }) =>
+  viewerIsAdmin.value || comment.author_id === currentUser.value?.id;
+
+async function removeComment(comment: CommentView) {
+  if (!post.value || !window.confirm("Delete this comment?")) return;
+  try {
+    await deleteComment(post.value, comment);
+  } catch (err) {
+    error.value = (err as Error).message;
+  }
+}
+
 // <dialog> traps focus and handles Esc for us, but the page behind still scrolls.
 useScrollLock();
 
@@ -89,7 +120,7 @@ onMounted(() => dialog.value?.showModal());
           aria-label="Close"
           @click="dialog?.close()"
         >
-          <AppIcon name="close" :size="22" />
+          <AppIcon name="close" :size="32" />
         </button>
 
         <div class="modal__steps">
@@ -100,7 +131,7 @@ onMounted(() => dialog.value?.showModal());
             :disabled="!post?.prev_id"
             @click="go(post?.prev_id)"
           >
-            <AppIcon name="chevronLeft" :size="22" />
+            <AppIcon name="chevronLeft" :size="32" />
             Previous
           </button>
           <button
@@ -111,7 +142,7 @@ onMounted(() => dialog.value?.showModal());
             @click="go(post?.next_id)"
           >
             Next
-            <AppIcon name="chevronRight" :size="22" />
+            <AppIcon name="chevronRight" :size="32" />
           </button>
         </div>
       </header>
@@ -132,6 +163,7 @@ onMounted(() => dialog.value?.showModal());
           detail
           :show-edit="post && editable && !editing"
           @edit="editing = true"
+          @delete="remove"
         />
 
         <section class="modal__comments">
@@ -145,12 +177,45 @@ onMounted(() => dialog.value?.showModal());
             class="comment"
           >
             <p class="comment__meta">
+              <img
+                v-if="comment.author.avatar_url"
+                class="comment__avatar"
+                :src="comment.author.avatar_url"
+                alt=""
+                width="24"
+                height="24"
+              />
+              <span v-else class="comment__avatar comment__avatar--blank" aria-hidden="true">
+                {{ comment.author.name.slice(0, 1) }}
+              </span>
               <strong>{{ comment.author.name }}</strong>
               <time :datetime="comment.created_at" class="muted">{{
                 ago(comment.created_at)
               }}</time>
             </p>
             <p class="comment__body selectable">{{ comment.body }}</p>
+            <p class="comment__actions">
+              <button
+                class="button-bare post__action"
+                type="button"
+                :class="{ 'post__action--liked': comment.liked_by_me }"
+                :aria-pressed="comment.liked_by_me"
+                :aria-label="comment.liked_by_me ? 'Unlike this comment' : 'Like this comment'"
+                @click="toggleCommentLike(comment).catch(() => {})"
+              >
+                <AppIcon name="heart" :filled="comment.liked_by_me" :size="18" />
+                <span v-if="comment.like_count">{{ comment.like_count }}</span>
+              </button>
+              <button
+                v-if="commentEditable(comment)"
+                class="button-bare post__action"
+                type="button"
+                aria-label="Delete comment"
+                @click="removeComment(comment)"
+              >
+                <AppIcon name="trash" :size="18" />
+              </button>
+            </p>
           </article>
         </section>
 
@@ -197,30 +262,6 @@ onMounted(() => dialog.value?.showModal());
   padding-right: var(--safe-right);
 }
 
-/* A sheet that comes up from the bottom edge, the way a detail view does on iOS. The
-   easing is Apple's sheet curve: quick to start, long settle, no bounce.
-   Entry only — a <dialog> is display:none the moment it closes, and buying an exit
-   animation costs a transition on `overlay`/`display` for every browser that has one. */
-.modal[open] {
-  animation: modal-in 280ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.modal[open]::backdrop {
-  animation: backdrop-in 280ms ease-out;
-}
-
-@keyframes modal-in {
-  from {
-    transform: translateY(100%);
-  }
-}
-
-@keyframes backdrop-in {
-  from {
-    opacity: 0;
-  }
-}
-
 .modal::backdrop {
   background: rgb(0 0 0 / 0.45);
 }
@@ -255,17 +296,12 @@ onMounted(() => dialog.value?.showModal());
 }
 
 /* Icon-only controls are the ones that end up under the minimum without help. */
-.modal__bar .button-bare {
-  min-height: var(--tap-target);
+.modal__bar button {
   justify-content: center;
 }
 
 .modal__close {
   min-width: var(--tap-target);
-}
-
-.modal__edit {
-  margin-left: var(--space-4);
 }
 
 .modal__steps {
@@ -281,6 +317,7 @@ onMounted(() => dialog.value?.showModal());
 
 .modal__comments {
   padding: var(--space-2) var(--space-4);
+  border-top: var(--border);
 }
 
 .comment {
@@ -290,14 +327,47 @@ onMounted(() => dialog.value?.showModal());
 .comment__meta {
   display: flex;
   gap: var(--space-2);
-  align-items: baseline;
+  align-items: center;
   margin: 0;
+}
+
+.comment__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment__avatar--blank {
+  display: grid;
+  place-items: center;
+  background: var(--color-surface);
+  border: var(--border);
+  text-transform: uppercase;
+  font-size: var(--font-size-sm);
 }
 
 .comment__body {
   margin: var(--space-1) 0 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.comment__actions {
+  display: flex;
+  gap: var(--space-4);
+  margin: var(--space-1) 0 0;
+}
+
+.post__action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  line-height: 1;
+}
+
+.post__action--liked {
+  color: var(--color-like);
 }
 
 .modal__composer {
