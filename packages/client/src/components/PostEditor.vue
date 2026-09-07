@@ -182,7 +182,13 @@ onBeforeUnmount(revokePicked);
     <form class="compose__form" @submit.prevent="submit">
       <label class="field">
         <span class="visually-hidden">Description</span>
-        <textarea v-model="body" rows="3" placeholder="Say something (optional)" />
+        <textarea
+          v-model="body"
+          rows="3"
+          placeholder="Say something (optional)"
+          autocapitalize="sentences"
+          enterkeyhint="enter"
+        />
       </label>
 
       <div class="field field--row">
@@ -250,6 +256,13 @@ onBeforeUnmount(revokePicked);
   margin: 0;
   padding: var(--space-5) 0;
   list-style: none;
+  /* Running out of thumbnails shouldn't hand the flick to Safari's back gesture. */
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.thumbs::-webkit-scrollbar {
+  display: none;
 }
 
 .thumbs__item {
@@ -357,14 +370,5 @@ onBeforeUnmount(revokePicked);
 .compose__submit {
   flex: 1;
   padding: var(--space-3);
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 </style>

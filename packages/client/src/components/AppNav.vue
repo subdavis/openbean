@@ -41,7 +41,29 @@ const items: { icon: IconName; label: string; name: string; to: string }[] = [
   margin: 0 auto;
   border-top: var(--border);
   background: var(--color-bg);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--safe-bottom);
+  /* Landscape puts the notch in one margin and a rounded corner in the other, either of
+     which can swallow the outermost item. */
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  transition: transform 200ms ease;
+}
+
+/* A tab bar that content slides under, rather than a solid strip pasted over it — the
+   one place a blur genuinely reads as the platform rather than as decoration. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .nav {
+    background: var(--color-bg-translucent);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+}
+
+/* iOS puts the keyboard over the bar without moving it, so it sits there invisible and
+   lurches whenever the visual viewport shifts. Get it out of the way instead, and give
+   the field being typed into the whole screen. */
+:root[data-keyboard] .nav {
+  transform: translateY(100%);
 }
 
 .nav__item {
@@ -55,6 +77,12 @@ const items: { icon: IconName; label: string; name: string; to: string }[] = [
   color: var(--color-muted);
   font-size: var(--font-size-sm);
   text-decoration: none;
+  transition: opacity 180ms ease-out;
+}
+
+.nav__item:active {
+  opacity: 0.5;
+  transition-duration: 0s;
 }
 
 .nav__item--active {
@@ -79,7 +107,11 @@ const items: { icon: IconName; label: string; name: string; to: string }[] = [
     margin: 0;
     border-top: 0;
     background: none;
-    padding-bottom: 0;
+    padding: 0;
+    /* In the rail there is nothing to slide out of the way of. */
+    transform: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   .nav__item {
@@ -95,8 +127,11 @@ const items: { icon: IconName; label: string; name: string; to: string }[] = [
     white-space: nowrap;
   }
 
-  .nav__item:hover {
-    color: var(--color-text);
+  /* Guarded: without it iOS leaves the hover state stuck on the last item tapped. */
+  @media (hover: hover) {
+    .nav__item:hover {
+      color: var(--color-text);
+    }
   }
 }
 </style>

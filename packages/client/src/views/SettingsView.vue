@@ -64,10 +64,7 @@ const patchUser = (u: User, body: Partial<User>) =>
 
 const removeUser = (u: User) =>
   run(async () => {
-    if (
-      !confirm(`Delete ${u.name} and all their posts? This cannot be undone.`)
-    )
-      return;
+    if (!confirm(`Delete ${u.name} and all their posts? This cannot be undone.`)) return;
     await api.del(`/users/${u.id}`);
     users.value = users.value.filter((row) => row.id !== u.id);
   });
@@ -101,7 +98,15 @@ const signOut = async () => {
       <form class="settings__row" @submit.prevent="saveName">
         <label class="settings__field">
           <span class="muted">Display name</span>
-          <input v-model="name" maxlength="80" required />
+          <input
+            v-model="name"
+            maxlength="80"
+            required
+            autocomplete="name"
+            autocapitalize="words"
+            autocorrect="off"
+            enterkeyhint="done"
+          />
         </label>
         <button
           class="button button-primary"

@@ -193,6 +193,16 @@ watch(
   right: var(--space-2);
 }
 
+/* Swipe is the gesture on a touch screen, and the count pill already says there is more
+   than one photo — so the arrows are pointer-only chrome. They stay reachable by keyboard
+   there; on a phone they were only ever sitting on top of the picture.
+   Placed after the rules above: same specificity, so it has to win on order. */
+@media (hover: none) {
+  .carousel__arrow {
+    display: none;
+  }
+}
+
 .carousel__count {
   position: absolute;
   top: var(--space-2);
