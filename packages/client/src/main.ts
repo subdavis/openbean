@@ -1,11 +1,9 @@
 import { registerSW } from "virtual:pwa-register";
 import { createApp } from "vue";
 import App from "./App.vue";
-import { trackKeyboardInset } from "./keyboard.ts";
 import { router } from "./router.ts";
 import "./style.css";
 
-trackKeyboardInset();
 
 // An installed PWA is restored from a frozen state instead of navigating, so the
 // browser's own update check (navigation-triggered, 24h-throttled) almost never

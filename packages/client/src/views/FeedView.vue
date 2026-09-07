@@ -46,7 +46,26 @@ onMounted(() => {
       <button class="button" type="button" @click="loadMore">Retry</button>
     </p>
 
+    <!-- <dialog> promotes to the top layer, so this always paints under the modal — no
+         z-index needed. inset:0 stretches it to main's full scrollable height (every post,
+         not just what's currently in the viewport), because iOS leaves the layout viewport
+         full-height when the keyboard shows and can scroll the page to bring a focused
+         field above it, exposing whatever's below the visual viewport otherwise. -->
+    <div v-if="openId" class="page-cover" aria-hidden="true"></div>
+
     <PostModal v-if="openId" :key="openId" :post-id="openId" @close="router.push('/posts')" />
   </main>
 </template>
+
+<style scoped>
+main {
+  position: relative;
+}
+
+.page-cover {
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg);
+}
+</style>
 

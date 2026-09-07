@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { useLoadNear } from "../composables/viewport.ts";
 import { ago, day } from "../format.ts";
 import type { CachedPost } from "../stores/posts.ts";
 import { toggleLike } from "../stores/posts.ts";
@@ -44,6 +45,11 @@ const images = computed(() =>
   })),
 );
 
+/** The modal is the only thing on screen — no viewport to be far from. */
+const card = ref<HTMLElement | null>(null);
+const nearViewport = useLoadNear(card);
+const load = computed(() => props.detail || nearViewport.value);
+
 /** post_date is the day the photo is *about*; show it only when it isn't the day it went up. */
 const postedOn = computed(() => props.post.published_at?.slice(0, 10));
 const showDate = computed(() => props.post.post_date !== postedOn.value);
@@ -58,6 +64,7 @@ onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
 
 <template>
   <article
+    ref="card"
     class="post"
     :class="{ 'post--clickable': !detail, 'post--detail': detail }"
     v-bind="cardAttrs"
@@ -88,7 +95,7 @@ onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
 
     <p v-if="post.body" class="post__body selectable">{{ post.body }}</p>
 
-    <PhotoCarousel v-if="images.length" :images="images" />
+    <PhotoCarousel v-if="images.length" :images="images" :load="load" />
 
     <footer v-if="detail" class="post__actions">
       <button
