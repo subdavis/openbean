@@ -1,0 +1,23 @@
+{
+  "name": "openbean",
+  "private": true,
+  "packageManager": "yarn@4.12.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "yarn workspace @openbean/client build",
+    "deploy": "yarn build && yarn workspace @openbean/server deploy",
+    "dev": "yarn workspace @openbean/client dev",
+    "dev:server": "yarn workspace @openbean/server dev:node",
+    "dev:worker": "yarn workspace @openbean/server dev",
+    "start": "yarn workspace @openbean/server start",
+    "test": "yarn workspaces foreach -A --include \"@openbean/*\" run test",
+    "typecheck": "yarn workspaces foreach -A --include \"@openbean/*\" run typecheck",
+    "validate": "biome check --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.5",
+    "wrangler": "^4.129.0"
+  }
+}

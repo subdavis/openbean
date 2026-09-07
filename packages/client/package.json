@@ -1,0 +1,23 @@
+{
+  "name": "@openbean/client",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "node --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@openbean/shared": "workspace:*",
+    "vue": "^3.5",
+    "vue-router": "^4.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5",
+    "typescript": "^5.7",
+    "vite": "^6",
+    "vite-plugin-pwa": "^0.21",
+    "vue-tsc": "^2"
+  }
+}

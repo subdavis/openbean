@@ -1,0 +1,10 @@
+{
+  "name": "@openbean/shared",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "types": "./src/types.ts",
+  "exports": {
+    ".": "./src/types.ts"
+  }
+}

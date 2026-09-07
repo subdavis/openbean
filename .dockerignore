@@ -1,0 +1,7 @@
+**/node_modules
+**/.yarn
+.git
+data
+packages/server/public
+packages/server/.wrangler
+packages/server/.env

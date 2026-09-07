@@ -1,0 +1,20 @@
+{
+  "assist": {
+    "actions": { "source": { "organizeImports": "on", "useSortedKeys": "on" } },
+    "enabled": true
+  },
+  "files": { "includes": ["packages/*/src/**/*", "packages/*/test/**/*"] },
+  "formatter": { "indentStyle": "space", "lineWidth": 100 },
+  "overrides": [
+    {
+      // Biome doesn't parse Vue templates, so every binding a template uses reads as
+      // unused here — and the "fix" would delete working code.
+      "includes": ["**/*.vue"],
+      "linter": {
+        "rules": {
+          "correctness": { "noUnusedImports": "off", "noUnusedVariables": "off" }
+        }
+      }
+    }
+  ]
+}

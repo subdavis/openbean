@@ -1,0 +1,14 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+data/
+dist/
+
+# Yarn with the node-modules linker; yarn.lock is committed.
+.yarn/*
+!.yarn/patches
+.pnp.*
+
+# Client build output, served by the server package.
+packages/server/public/
