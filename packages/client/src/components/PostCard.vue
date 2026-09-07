@@ -79,7 +79,7 @@ const showDate = computed(() => props.post.post_date !== postedOn.value);
       </div>
     </header>
 
-    <p v-if="post.body" class="post__body">{{ post.body }}</p>
+    <p v-if="post.body" class="post__body selectable">{{ post.body }}</p>
 
     <PhotoCarousel v-if="images.length" :images="images" />
 

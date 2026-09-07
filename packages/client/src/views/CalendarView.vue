@@ -114,7 +114,9 @@ onMounted(() => {
    on its own as it scrolls past, with no scroll listener to track which is in view. */
 .month__head {
   position: sticky;
-  top: 0;
+  /* Zero in a tab; in the installed app the status bar is over the page, and a header
+     pinned to 0 would slide underneath it. */
+  top: var(--safe-top);
   z-index: 1;
   background: var(--color-bg);
   padding: var(--space-3) var(--space-2) var(--space-2);

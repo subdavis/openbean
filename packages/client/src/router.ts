@@ -28,6 +28,15 @@ export const router = createRouter({
     { component: SettingsView, name: "settings", path: "/settings" },
     { path: "/:pathMatch(.*)*", redirect: "/posts" },
   ],
+  // Vue Router takes scroll restoration off the browser as soon as this exists, so it
+  // has to answer for every case the browser used to.
+  scrollBehavior(to, from, saved) {
+    // Opening or closing a post only swaps :id on the route the list already owns —
+    // the list never unmounts, and scrolling it would lose the reader's place.
+    if (to.name === from.name) return false;
+    // `saved` is only ever set on a back/forward, which is exactly when it should win.
+    return saved ?? { left: 0, top: 0 };
+  },
 });
 
 router.beforeEach(async (to) => {

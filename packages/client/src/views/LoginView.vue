@@ -31,7 +31,6 @@ const loginUrl = computed(() =>
 }
 
 .login__button {
-  display: inline-block;
   margin-top: var(--space-5);
   text-decoration: none;
 }

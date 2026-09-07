@@ -11,14 +11,33 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
+      // Not emitted by the build, so name them or they miss the precache manifest.
+      includeAssets: ["icon.svg", "apple-touch-icon.png"],
       manifest: {
-        background_color: "#f7f5f0",
+        // The splash iOS and Android paint before the first frame. Matching --color-bg
+        // is what keeps launch from flashing a different shade than the app itself.
+        background_color: "#ffffff",
         display: "standalone",
-        icons: [{ sizes: "any", src: "/icon.svg", type: "image/svg+xml" }],
+        icons: [
+          { sizes: "any", src: "/icon.svg", type: "image/svg+xml" },
+          // iOS and older Android launchers only take raster icons.
+          { sizes: "192x192", src: "/icon-192.png", type: "image/png" },
+          { sizes: "512x512", src: "/icon-512.png", type: "image/png" },
+          // Full-bleed art inside the 80% safe zone, for launchers that apply their
+          // own mask — without one Android boxes the rounded icon inside a circle.
+          {
+            purpose: "maskable",
+            sizes: "512x512",
+            src: "/icon-maskable-512.png",
+            type: "image/png",
+          },
+        ],
+        id: "/",
         name: "Open Album",
-        short_name: "Open Album",
+        scope: "/",
+        short_name: "Album",
         start_url: "/posts",
-        theme_color: "#2a2a28",
+        theme_color: "#ffffff",
       },
       registerType: "autoUpdate",
       // The shell answers navigations, but /api belongs to the server: without this the
