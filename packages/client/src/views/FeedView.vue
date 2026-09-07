@@ -32,7 +32,6 @@ onMounted(() => {
       :key="post.id"
       :post="post"
       @open="router.push(`/posts/${post.id}`)"
-      :style="{ paddingBottom: 'var(--space-6)' }"
     />
 
     <div v-if="!feed.done" ref="sentinel" class="status">
@@ -60,6 +59,8 @@ onMounted(() => {
 <style scoped>
 main {
   position: relative;
+  display: grid;
+  gap: var(--space-6);
 }
 
 .page-cover {

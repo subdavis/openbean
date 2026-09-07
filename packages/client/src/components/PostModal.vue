@@ -12,7 +12,7 @@ import {
   getPost,
   toggleCommentLike,
 } from "../stores/posts.ts";
-import { currentUser, isAdmin as viewerIsAdmin } from "../stores/session.ts";
+import { currentUser, isAdmin } from "../stores/session.ts";
 import AppIcon from "./AppIcon.vue";
 import PostCard from "./PostCard.vue";
 import PostEditor from "./PostEditor.vue";
@@ -32,9 +32,7 @@ const post = computed(() => getPost(props.postId));
 /** The feed already has the post body/photos; only the comments need fetching. */
 const commentsLoaded = computed(() => post.value?.comments !== undefined);
 /** Same rule as the server's canEdit: author or admin. */
-const editable = computed(
-  () => viewerIsAdmin.value || post.value?.author_id === currentUser.value?.id,
-);
+const editable = computed(() => isAdmin.value || post.value?.author_id === currentUser.value?.id);
 
 watch(
   () => props.postId,
@@ -84,7 +82,7 @@ async function remove() {
 
 /** Same rule as the server's canEdit: author or admin. */
 const commentEditable = (comment: { author_id: number }) =>
-  viewerIsAdmin.value || comment.author_id === currentUser.value?.id;
+  isAdmin.value || comment.author_id === currentUser.value?.id;
 
 async function removeComment(comment: CommentView) {
   if (!post.value || !window.confirm("Delete this comment?")) return;
@@ -179,13 +177,13 @@ onMounted(() => dialog.value?.showModal());
             <p class="comment__meta">
               <img
                 v-if="comment.author.avatar_url"
-                class="comment__avatar"
+                class="avatar comment__avatar"
                 :src="comment.author.avatar_url"
                 alt=""
                 width="24"
                 height="24"
               />
-              <span v-else class="comment__avatar comment__avatar--blank" aria-hidden="true">
+              <span v-else class="avatar avatar--blank comment__avatar" aria-hidden="true">
                 {{ comment.author.name.slice(0, 1) }}
               </span>
               <strong>{{ comment.author.name }}</strong>
@@ -196,9 +194,9 @@ onMounted(() => dialog.value?.showModal());
             <p class="comment__body selectable">{{ comment.body }}</p>
             <p class="comment__actions">
               <button
-                class="button-bare post__action"
+                class="button-bare action"
                 type="button"
-                :class="{ 'post__action--liked': comment.liked_by_me }"
+                :class="{ 'action--liked': comment.liked_by_me }"
                 :aria-pressed="comment.liked_by_me"
                 :aria-label="comment.liked_by_me ? 'Unlike this comment' : 'Like this comment'"
                 @click="toggleCommentLike(comment).catch(() => {})"
@@ -208,7 +206,7 @@ onMounted(() => dialog.value?.showModal());
               </button>
               <button
                 v-if="commentEditable(comment)"
-                class="button-bare post__action"
+                class="button-bare action"
                 type="button"
                 aria-label="Delete comment"
                 @click="removeComment(comment)"
@@ -246,10 +244,7 @@ onMounted(() => dialog.value?.showModal());
 .modal {
   width: min(100%, var(--content-width));
   max-width: none;
-  /* The keyboard doesn't shrink the layout viewport on iOS, so a 100dvh panel keeps its
-     bottom half — the comment box included — underneath it. keyboard.ts measures the
-     covered strip; taking it off the height is what lifts the composer back into view. */
-  height: calc(100dvh - var(--keyboard-inset));
+  height: 100dvh;
   max-height: none;
   margin: 0 auto;
   padding: 0;
@@ -268,7 +263,6 @@ onMounted(() => dialog.value?.showModal());
 
 /* Only ever focused as the dialog's landing spot, never by tabbing — a ring on a scroll
    container says nothing. */
-.modal__panel:focus,
 .modal__panel:focus-visible {
   outline: none;
 }
@@ -295,13 +289,10 @@ onMounted(() => dialog.value?.showModal());
   background: var(--color-bg);
 }
 
-/* Icon-only controls are the ones that end up under the minimum without help. */
-.modal__bar button {
-  justify-content: center;
-}
-
+/* Icon-only, so it ends up under the minimum touch target without help. */
 .modal__close {
   min-width: var(--tap-target);
+  justify-content: center;
 }
 
 .modal__steps {
@@ -334,16 +325,6 @@ onMounted(() => dialog.value?.showModal());
 .comment__avatar {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.comment__avatar--blank {
-  display: grid;
-  place-items: center;
-  background: var(--color-surface);
-  border: var(--border);
-  text-transform: uppercase;
   font-size: var(--font-size-sm);
 }
 
@@ -359,17 +340,6 @@ onMounted(() => dialog.value?.showModal());
   margin: var(--space-1) 0 0;
 }
 
-.post__action {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  line-height: 1;
-}
-
-.post__action--liked {
-  color: var(--color-like);
-}
-
 .modal__composer {
   display: flex;
   flex-direction: column;
@@ -382,11 +352,6 @@ onMounted(() => dialog.value?.showModal());
 
 .modal__composer textarea {
   width: 100%;
-  padding: var(--space-2);
-  border: var(--border);
-  border-radius: var(--radius);
-  background: var(--color-bg);
-  resize: vertical;
 }
 
 .modal__error {

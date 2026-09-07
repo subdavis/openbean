@@ -2,19 +2,20 @@
 import { computed, ref, watch } from "vue";
 import AppIcon from "./AppIcon.vue";
 
+/** The API's PhotoView shape, loosened so the editor can feed it freshly picked files too. */
 export type CarouselImage = {
   id: number | string;
   url: string;
-  alt?: string;
   /** 180px copy, painted under the photo as a placeholder until the full one arrives. */
-  thumbUrl?: string | null;
+  thumb_url?: string | null;
   width?: number | null;
   height?: number | null;
 };
 
-const props = withDefaults(defineProps<{ images: CarouselImage[]; load?: boolean }>(), {
-  load: true,
-});
+const props = withDefaults(
+  defineProps<{ images: CarouselImage[]; alt?: string; load?: boolean }>(),
+  { alt: "", load: true },
+);
 /** Two-way so a thumbnail strip (or anything else) can drive the carousel. */
 const index = defineModel<number>("index", { default: 0 });
 
@@ -43,7 +44,7 @@ const ratio = computed(() => {
  * dropped offscreen, and the photo covers it as soon as it decodes.
  */
 const slideStyle = (image: CarouselImage) => ({
-  backgroundImage: image.thumbUrl ? `url("${image.thumbUrl}")` : undefined,
+  backgroundImage: image.thumb_url ? `url("${image.thumb_url}")` : undefined,
 });
 
 function onScroll() {
@@ -89,7 +90,7 @@ watch(
              slides of a multi-photo post stay lazy, and swiping promotes them. -->
         <img
           :src="load ? image.url : undefined"
-          :alt="image.alt ?? ''"
+          :alt="alt"
           :loading="i === index ? 'eager' : 'lazy'"
           decoding="async"
         />
@@ -134,7 +135,7 @@ watch(
      card open as it scrolls into view and scroll anchoring lurches to compensate.
      Overridden inline with the first photo's real ratio; this is the fallback for rows
      stored before width/height were captured. */
-  aspect-ratio: 5 / 5;
+  aspect-ratio: 1;
   /* Keep a sideways flick off the browser's back gesture. */
   overscroll-behavior-x: contain;
   scrollbar-width: none;

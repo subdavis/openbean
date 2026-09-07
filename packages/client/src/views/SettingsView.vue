@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import { api } from "../api.ts";
 import AppIcon from "../components/AppIcon.vue";
 import { day } from "../format.ts";
-import { currentUser, isAdmin, logout, setUser } from "../stores/session.ts";
+import { currentUser, isAdmin, logout } from "../stores/session.ts";
 
 type InviteRow = Invite & { redeemed_by_name: string | null };
 
@@ -49,7 +49,7 @@ const saveName = () =>
     savingName.value = true;
     nameSaved.value = false;
     try {
-      setUser(await api.patch<User>("/users/me", { name: name.value.trim() }));
+      currentUser.value = await api.patch<User>("/users/me", { name: name.value.trim() });
       nameSaved.value = true;
     } finally {
       savingName.value = false;
@@ -96,7 +96,7 @@ const signOut = async () => {
     <section class="settings__section">
       <h1>Your profile</h1>
       <form class="settings__row" @submit.prevent="saveName">
-        <label class="settings__field">
+        <label class="field settings__field">
           <span class="muted">Display name</span>
           <input
             v-model="name"
@@ -117,7 +117,6 @@ const signOut = async () => {
         </button>
       </form>
       <p v-if="nameSaved" class="muted">Saved.</p>
-      
     </section>
 
     <template v-if="isAdmin">
@@ -172,7 +171,7 @@ const signOut = async () => {
       </section>
 
       <section class="settings__section">
-        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+        <div class="settings__head">
           <h1>Invites</h1>
           <button class="button" type="button" @click="createInvite">
             Create new invite
@@ -206,23 +205,16 @@ const signOut = async () => {
           </li>
         </ul>
       </section>
-
-      <section class="settings_section">
-        <h1>Log out</h1>
-        <button class="button" type="button" @click="signOut">Log out</button>
-      </section>
     </template>
+
+    <section class="settings__section">
+      <h1>Log out</h1>
+      <button class="button" type="button" @click="signOut">Log out</button>
+    </section>
   </main>
 </template>
 
 <style scoped>
-.settings__title {
-  margin: 0;
-  padding: var(--space-4);
-  font-size: var(--font-size-lg);
-  border-bottom: var(--border);
-}
-
 .settings__error {
   padding: 0 var(--space-4);
 }
@@ -232,12 +224,14 @@ const signOut = async () => {
   flex-direction: column;
   align-items: start;
   gap: var(--space-3);
-  padding-bottom: var(--space-5);
+  padding-bottom: var(--space-6);
 }
 
-.settings__section h2 {
-  margin: 0;
-  font-size: var(--font-size);
+.settings__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 .settings__row {
@@ -248,18 +242,7 @@ const signOut = async () => {
 }
 
 .settings__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
   flex: 1;
-}
-
-.settings__field input,
-select {
-  padding: var(--space-2);
-  border: var(--border);
-  border-radius: var(--radius);
-  background: var(--color-bg);
 }
 
 .list {

@@ -8,7 +8,7 @@ export interface Db {
 }
 
 /** Both drivers only accept null/number/string/blob — normalise JS values once, here. */
-const args = (params: unknown[]) =>
+export const args = (params: unknown[]) =>
   params.map((v) => (typeof v === "boolean" ? +v : v === undefined ? null : v));
 
 export function d1(db: D1Database): Db {

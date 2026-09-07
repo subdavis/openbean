@@ -41,10 +41,6 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
 
-  /* Height of the strip the software keyboard covers, kept up to date by keyboard.ts.
-     Zero unless something is focused. */
-  --keyboard-inset: 0px;
-
   /* No dark palette yet; say so, or the UA renders form controls and scrollbars for a
      scheme this stylesheet doesn't have colours for. */
   color-scheme: light;
@@ -92,20 +88,24 @@ select {
   font-size: var(--font-size-control);
 }
 
+/* One look for every text-like control. min-height: a field is as much a touch target
+   as a button is. */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  min-height: var(--tap-target);
+  padding: var(--space-2);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
 /* iOS gives text fields an inner shadow and rounds them to its own radius; both read as
    "unstyled web form" next to the rest of this app. Checkboxes, radios and selects keep
    their native appearance — they have no look of ours to fall back on. */
 input:not([type="checkbox"]):not([type="radio"]),
 textarea {
   appearance: none;
-  border-radius: var(--radius);
-}
-
-/* A field is as much a touch target as a button is. */
-input:not([type="checkbox"]):not([type="radio"]),
-textarea,
-select {
-  min-height: var(--tap-target);
 }
 
 textarea {
@@ -115,14 +115,6 @@ textarea {
 
 a {
   color: inherit;
-}
-
-/* No hover on a finger. Without the guard iOS "sticks" the hover state on whatever was
-   tapped last until you tap elsewhere. Components put their hover rules inside this too. */
-@media (hover: hover) {
-  a:hover {
-    color: var(--color-text);
-  }
 }
 
 /* No focus ring by default — a suppression, since the UA draws one of its own too.
@@ -189,12 +181,11 @@ select,
 }
 
 .container {
-  padding: 0 var(--space-4);
-  margin-top: -0.675em;
+  padding: var(--space-3) var(--space-4) 0;
 }
 
-.clickable {
-  cursor: pointer;
+.container h1 {
+  margin-top: 0;
 }
 
 /* Desktop: the bottom bar becomes a rail in the left margin. Three columns with equal
@@ -290,8 +281,40 @@ select,
   font-size: var(--font-size-sm);
 }
 
-/* Was duplicated in FeedView and PostEditor; both label a control or a heading that
-   only a screen reader needs. */
+/* A labelled control: caption above, field below. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Like/comment/delete controls on a post or comment: icon plus optional count. */
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  line-height: 1;
+}
+
+.action--liked {
+  color: var(--color-like);
+}
+
+/* An <img>, or a span showing the initial when there is no picture. Size it locally. */
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar--blank {
+  display: grid;
+  place-items: center;
+  background: var(--color-surface);
+  border: var(--border);
+  text-transform: uppercase;
+}
+
+/* A heading or label that only a screen reader needs. */
 .visually-hidden {
   position: absolute;
   width: 1px;

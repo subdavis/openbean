@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import type { Db } from "./db.ts";
+import { args, type Db } from "./db.ts";
 
 /**
  * node:sqlite adapter. Applies pending migration files on open, recording each one so
@@ -26,15 +26,14 @@ export function sqlite(path: string, migrations: string[]): Db {
     db.prepare("INSERT INTO _migrations (file) VALUES (?)").run(name);
   }
 
-  const args = (params: unknown[]) =>
-    params.map((v) => (typeof v === "boolean" ? +v : v === undefined ? null : v)) as never[];
+  const bind = (p: unknown[]) => args(p) as never[];
 
   return {
-    all: async <T>(sql: string, ...p: unknown[]) => db.prepare(sql).all(...args(p)) as T[],
+    all: async <T>(sql: string, ...p: unknown[]) => db.prepare(sql).all(...bind(p)) as T[],
     first: async <T>(sql: string, ...p: unknown[]) =>
-      (db.prepare(sql).get(...args(p)) as T) ?? null,
+      (db.prepare(sql).get(...bind(p)) as T) ?? null,
     run: async (sql: string, ...p: unknown[]) => {
-      const r = db.prepare(sql).run(...args(p));
+      const r = db.prepare(sql).run(...bind(p));
       return { changes: Number(r.changes), id: Number(r.lastInsertRowid) };
     },
   };

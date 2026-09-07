@@ -40,7 +40,11 @@ const items: { icon: IconName; label: string; name: string; to: string }[] = [
   max-width: var(--content-width);
   margin: 0 auto;
   border-top: var(--border);
-  background: var(--color-bg);
+  /* A tab bar that content slides under, rather than a solid strip pasted over it — the
+     one place a blur genuinely reads as the platform rather than as decoration. */
+  background: var(--color-bg-translucent);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
   /* Eats 30% of the bar's own height back out of the safe-area clearance, so the bar
      rides a bit lower into the home-indicator bezel instead of floating clear above it.
      Clamped to 0 so devices with little or no safe-area-inset-bottom are unaffected. */
@@ -49,24 +53,6 @@ const items: { icon: IconName; label: string; name: string; to: string }[] = [
      which can swallow the outermost item. */
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
-  transition: transform 200ms ease;
-}
-
-/* A tab bar that content slides under, rather than a solid strip pasted over it — the
-   one place a blur genuinely reads as the platform rather than as decoration. */
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .nav {
-    background: var(--color-bg-translucent);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    backdrop-filter: saturate(180%) blur(20px);
-  }
-}
-
-/* iOS puts the keyboard over the bar without moving it, so it sits there invisible and
-   lurches whenever the visual viewport shifts. Get it out of the way instead, and give
-   the field being typed into the whole screen. */
-:root[data-keyboard] .nav {
-  transform: translateY(100%);
 }
 
 .nav__item {
@@ -111,8 +97,6 @@ const items: { icon: IconName; label: string; name: string; to: string }[] = [
     border-top: 0;
     background: none;
     padding: 0;
-    /* In the rail there is nothing to slide out of the way of. */
-    transform: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }

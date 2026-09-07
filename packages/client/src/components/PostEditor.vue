@@ -13,11 +13,11 @@ const emit = defineEmits<{ saved: [id: number]; cancel: [] }>();
 
 /** One list for both kinds of photo: already uploaded (`photoId`) or just picked (`file`). */
 type Item = {
-  id: string;
+  id: number | string;
   url: string;
   file?: File;
   photoId?: number;
-  thumbUrl?: string | null;
+  thumb_url?: string | null;
   width?: number | null;
   height?: number | null;
 };
@@ -46,15 +46,7 @@ function revokePicked() {
 /** (Re)fills the form from the post being edited, or empties it for a new one. */
 function reset() {
   revokePicked();
-  items.value =
-    props.post?.photos.map((photo) => ({
-      height: photo.height,
-      id: `photo-${photo.id}`,
-      photoId: photo.id,
-      thumbUrl: photo.thumb_url,
-      url: photo.url,
-      width: photo.width,
-    })) ?? [];
+  items.value = props.post?.photos.map((photo) => ({ ...photo, photoId: photo.id })) ?? [];
   removed.value = [];
   index.value = 0;
   body.value = props.post?.body ?? "";
@@ -107,9 +99,7 @@ async function submit() {
       is_private: isPrivate.value,
       post_date: postDate.value,
     };
-    const files = items.value
-      .map((item) => item.file)
-      .filter((file) => file !== undefined);
+    const files = items.value.map((item) => item.file).filter((file) => file !== undefined);
     const { failed, id } = props.post
       ? await savePost(props.post, draft, files, removed.value)
       : await createPost(draft, files);
@@ -133,24 +123,10 @@ onBeforeUnmount(revokePicked);
 
 <template>
   <div class="compose container">
-    <h1 class="compose__title">{{ post ? "Edit post" : "New post" }}</h1>
+    <h1>{{ post ? "Edit post" : "New post" }}</h1>
 
-    <input
-      ref="picker"
-      class="compose__picker"
-      type="file"
-      accept="image/*"
-      multiple
-      @change="add"
-    />
-    <input
-      ref="camera"
-      class="compose__picker"
-      type="file"
-      accept="image/*"
-      capture="environment"
-      @change="add"
-    />
+    <input ref="picker" type="file" accept="image/*" multiple hidden @change="add" />
+    <input ref="camera" type="file" accept="image/*" capture="environment" hidden @change="add" />
 
     <div v-if="items.length === 0" class="compose__empty-choices">
       <button
@@ -193,7 +169,7 @@ onBeforeUnmount(revokePicked);
             :aria-label="`Show photo ${i + 1}`"
             @click="index = i"
           >
-            <img :src="item.thumbUrl ?? item.url" alt="" />
+            <img :src="item.thumb_url ?? item.url" alt="" />
           </button>
         </li>
         <li>
@@ -221,22 +197,20 @@ onBeforeUnmount(revokePicked);
         />
       </label>
 
-      <div class="field field--row">
-        <label class="compose__date">
-          <span class="muted">Date</span>
-          <div  class="compose__date--row">
-            <input v-model="postDate" type="date" required />
-            <button
-              class="button"
-              type="button"
-              :disabled="!current?.file"
-              @click="useMetadataDate"
-            >
-              Use photo date
-            </button>
-          </div>
-        </label>
-      </div>
+      <label class="field">
+        <span class="muted">Date</span>
+        <div class="compose__date">
+          <input v-model="postDate" type="date" required />
+          <button
+            class="button"
+            type="button"
+            :disabled="!current?.file"
+            @click="useMetadataDate"
+          >
+            Use photo date
+          </button>
+        </div>
+      </label>
 
       <label class="switch">
         <input v-model="isPrivate" type="checkbox" />
@@ -269,10 +243,6 @@ onBeforeUnmount(revokePicked);
 </template>
 
 <style scoped>
-.compose__picker {
-  display: none;
-}
-
 .compose__empty-choices {
   display: flex;
   gap: var(--space-3);
@@ -341,29 +311,13 @@ onBeforeUnmount(revokePicked);
   gap: var(--space-5);
 }
 
-.field textarea,
-.compose__date input {
-  width: 100%;
-  padding: var(--space-2);
-  border: var(--border);
-  border-radius: var(--radius);
-  background: var(--color-bg);
-}
-
 .compose__date {
-  width: 100%;
-}
-
-.compose__date--row {
-  width: 100%;
   display: flex;
   gap: var(--space-3);
 }
 
-.field--row {
-  display: flex;
-  gap: var(--space-3);
-  align-items: end;
+.compose__date input {
+  flex: 1;
 }
 
 .switch {

@@ -14,13 +14,9 @@ import { onBeforeUnmount, onMounted } from "vue";
  * touch, but the modal is a <dialog> sized in dvh, so this app already asks for 15.4+.
  */
 export function useScrollLock() {
-  const targets = () => [document.documentElement, document.body];
-
-  onMounted(() => {
-    for (const el of targets()) el.style.overflow = "hidden";
-  });
-
-  onBeforeUnmount(() => {
-    for (const el of targets()) el.style.overflow = "";
-  });
+  const set = (overflow: string) => {
+    for (const el of [document.documentElement, document.body]) el.style.overflow = overflow;
+  };
+  onMounted(() => set("hidden"));
+  onBeforeUnmount(() => set(""));
 }

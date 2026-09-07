@@ -72,7 +72,7 @@ export const calendar = reactive({
   done: false,
   error: "",
   loading: false,
-  /** Newest first: DOM order for the column-reverse scroller, which renders it upward. */
+  /** Newest first, the order the calendar renders them in. */
   months: [] as string[],
 });
 

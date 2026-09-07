@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { ICONS, type IconName } from "../icons.ts";
 
-const props = withDefaults(defineProps<{ name: IconName; filled?: boolean; size?: number }>(), {
+withDefaults(defineProps<{ name: IconName; filled?: boolean; size?: number }>(), {
   filled: false,
   size: 24,
 });
-
-const paths = computed(() => ICONS[props.name]);
 </script>
 
 <template>
@@ -23,6 +20,6 @@ const paths = computed(() => ICONS[props.name]);
     aria-hidden="true"
     focusable="false"
   >
-    <path v-for="d in paths" :key="d" :d="d" />
+    <path v-for="d in ICONS[name]" :key="d" :d="d" />
   </svg>
 </template>

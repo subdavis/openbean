@@ -34,17 +34,6 @@ const cardAttrs = computed(() =>
       },
 );
 
-const images = computed(() =>
-  props.post.photos.map((photo) => ({
-    alt: `Photo from ${props.post.author.name}`,
-    height: photo.height,
-    id: photo.id,
-    thumbUrl: photo.thumb_url,
-    url: photo.url,
-    width: photo.width,
-  })),
-);
-
 /** The modal is the only thing on screen — no viewport to be far from. */
 const card = ref<HTMLElement | null>(null);
 const nearViewport = useLoadNear(card);
@@ -72,13 +61,13 @@ onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
     <header class="post__header">
       <img
         v-if="post.author.avatar_url"
-        class="post__avatar"
+        class="avatar post__avatar"
         :src="post.author.avatar_url"
         alt=""
         width="36"
         height="36"
       />
-      <span v-else class="post__avatar post__avatar--blank" aria-hidden="true">
+      <span v-else class="avatar avatar--blank post__avatar" aria-hidden="true">
         {{ post.author.name.slice(0, 1) }}
       </span>
       <div>
@@ -95,13 +84,18 @@ onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
 
     <p v-if="post.body" class="post__body selectable">{{ post.body }}</p>
 
-    <PhotoCarousel v-if="images.length" :images="images" :load="load" />
+    <PhotoCarousel
+      v-if="post.photos.length"
+      :images="post.photos"
+      :alt="`Photo from ${post.author.name}`"
+      :load="load"
+    />
 
     <footer v-if="detail" class="post__actions">
       <button
-        class="button-bare post__action"
+        class="button-bare action"
         type="button"
-        :class="{ 'post__action--liked': post.liked_by_me }"
+        :class="{ 'action--liked': post.liked_by_me }"
         :aria-pressed="post.liked_by_me"
         :aria-label="post.liked_by_me ? 'Unlike this post' : 'Like this post'"
         @click="toggleLike(post).catch(() => {})"
@@ -110,15 +104,13 @@ onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
         <span v-if="post.like_count">{{ post.like_count }}</span>
       </button>
 
-      <span class="post__action">
+      <span class="action">
         <AppIcon name="comment" :size="26" />
         <span v-if="post.comment_count">{{ post.comment_count }}</span>
       </span>
 
-      <div style="flex: 1" />
-
       <details v-if="showEdit" ref="menu" class="post__menu">
-        <summary class="button-bare post__action clickable" aria-label="Post options">
+        <summary class="button-bare action" aria-label="Post options">
           More
           <AppIcon name="moreVertical" :size="20" />
         </summary>
@@ -168,16 +160,6 @@ onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
 .post__avatar {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.post__avatar--blank {
-  display: grid;
-  place-items: center;
-  background: var(--color-surface);
-  border: var(--border);
-  text-transform: uppercase;
 }
 
 .post__author {
@@ -189,7 +171,6 @@ onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
 }
 
 .post__body {
-  margin: 0;
   margin: var(--space-4);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -202,23 +183,14 @@ onBeforeUnmount(() => document.removeEventListener("click", closeMenuOutside));
   padding: var(--space-3) var(--space-4);
 }
 
-.post__action {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  line-height: 1;
-}
-
-.post__action--liked {
-  color: var(--color-like);
-}
-
 .post__menu {
   position: relative;
+  margin-left: auto;
 }
 
 .post__menu > summary {
   list-style: none;
+  cursor: pointer;
 }
 
 .post__menu > summary::-webkit-details-marker {

@@ -25,20 +25,6 @@ export function commentRoutes(app: Hono<AppEnv>) {
     return c.json(await c.env.db.first<Comment>("SELECT * FROM comments WHERE id = ?", id), 201);
   });
 
-  app.patch("/api/comments/:id", async (c) => {
-    const comment = await editable(c);
-    if (!comment) return c.json({ error: "Not found" }, 404);
-    const body = text((await c.req.json<{ body?: string }>()).body, BODY_MAX);
-    if (!body) return c.json({ error: "Comment body required" }, 400);
-    await c.env.db.run(
-      "UPDATE comments SET body = ?, updated_at = ? WHERE id = ?",
-      body,
-      now(),
-      comment.id,
-    );
-    return c.json(await c.env.db.first<Comment>("SELECT * FROM comments WHERE id = ?", comment.id));
-  });
-
   app.delete("/api/comments/:id", async (c) => {
     const comment = await editable(c);
     if (!comment) return c.json({ error: "Not found" }, 404);
@@ -47,7 +33,7 @@ export function commentRoutes(app: Hono<AppEnv>) {
   });
 }
 
-/** A comment is editable if its post is visible and the caller is its author or an admin. */
+/** A comment is deletable if its post is visible and the caller is its author or an admin. */
 async function editable(c: Context<AppEnv>) {
   const user = c.get("user");
   const comment = await c.env.db.first<Comment>(

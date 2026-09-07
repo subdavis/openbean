@@ -3,7 +3,7 @@ import { requireAdmin } from "../auth.ts";
 import { deleteUser } from "../content.ts";
 import { s3 } from "../s3.ts";
 import type { AppEnv, User } from "../types.ts";
-import { isUrl, text } from "../util.ts";
+import { text } from "../util.ts";
 
 export function userRoutes(app: Hono<AppEnv>) {
   app.get("/api/users", async (c) =>
@@ -16,24 +16,10 @@ export function userRoutes(app: Hono<AppEnv>) {
   );
 
   app.patch("/api/users/me", async (c) => {
-    const body = await c.req.json<{ name?: string; avatar_url?: string | null }>();
     const me = c.get("user");
-    const name = body.name === undefined ? me.name : text(body.name, 80);
+    const name = text((await c.req.json<{ name?: string }>()).name, 80);
     if (!name) return c.json({ error: "Invalid name" }, 400);
-    const avatar =
-      body.avatar_url === undefined
-        ? me.avatar_url
-        : body.avatar_url === null || isUrl(body.avatar_url)
-          ? body.avatar_url
-          : undefined;
-    if (avatar === undefined) return c.json({ error: "Invalid avatar_url" }, 400);
-
-    await c.env.db.run(
-      "UPDATE users SET name = ?, avatar_url = ? WHERE id = ?",
-      name,
-      avatar,
-      me.id,
-    );
+    await c.env.db.run("UPDATE users SET name = ? WHERE id = ?", name, me.id);
     return c.json(await c.env.db.first<User>("SELECT * FROM users WHERE id = ?", me.id));
   });
 
