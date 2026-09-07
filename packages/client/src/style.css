@@ -125,9 +125,32 @@ a {
   }
 }
 
+/* No focus ring by default — a suppression, since the UA draws one of its own too.
+   Text fields are what forces this: the spec has :focus-visible always match them, even
+   when the focus came from a tap, so touching into any field drew a hard rectangle
+   floating outside its own rounded border. */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: none;
+}
+
+/* Put it back where there is a keyboard to Tab with, since without an indicator there is
+   no way to tell where focus has got to. A touch screen has no Tab key, so it gets
+   nothing. Text fields are left out on purpose in both cases: the caret already says
+   where you are, and the ring only ever doubled up with the field's own border.
+   :where() keeps this at zero specificity so components can still opt out. */
+@media (hover: hover) and (pointer: fine) {
+  :where(
+    a,
+    button,
+    select,
+    summary,
+    [tabindex],
+    input[type="checkbox"],
+    input[type="radio"]
+  ):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }
 
 /* Controls: no 300ms double-tap-to-zoom wait, no long-press callout, no text selection

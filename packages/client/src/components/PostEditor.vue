@@ -357,9 +357,13 @@ onBeforeUnmount(revokePicked);
   transform: translateX(18px);
 }
 
-.switch input:focus-visible + .switch__track {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+/* The checkbox is visually hidden, so the ring has to go on the track it drives.
+   Pointer-and-keyboard only, matching the global rule in style.css. */
+@media (hover: hover) and (pointer: fine) {
+  .switch input:focus-visible + .switch__track {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }
 
 .compose__buttons {
