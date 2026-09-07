@@ -11,18 +11,19 @@
     {
       "binding": "DB",
       "database_name": "openbean-db",
-      "database_id": "REPLACE_ME",
+      "database_id": "cd38d129-0d79-41d4-9538-590137486f05",
       "migrations_dir": "migrations"
     }
   ],
   "vars": {
-    "APP_ORIGIN": "https://openbean.example.com",
-    "BOOTSTRAP_ADMIN_EMAIL": "",
-    "S3_BUCKET": "openbean-photos",
+    "APP_ORIGIN": "https://beans.subdavis.com",
+    "BOOTSTRAP_ADMIN_EMAIL": "davis.a.brandon@gmail.com",
+    "S3_BUCKET": "photobucket.subdavis.com",
     "S3_ENDPOINT": "https://storage.googleapis.com",
     "S3_REGION": "auto",
     "MAX_PHOTOS_PER_POST": "20"
   },
+  "routes": [{ "pattern": "beans.subdavis.com", "custom_domain": true }],
   "secrets": {
     "required": [
       "JWT_SECRET",

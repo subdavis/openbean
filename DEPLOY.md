@@ -48,6 +48,26 @@ gcloud storage hmac create openbean-photos@$PROJECT.iam.gserviceaccount.com --pr
 `accessId` → `S3_ACCESS_KEY_ID`, `secret` → `S3_SECRET_ACCESS_KEY`,
 `S3_ENDPOINT=https://storage.googleapis.com`, `S3_REGION=auto`.
 
+### Dev bucket
+
+Local dev should never touch the prod bucket. Make a second one, same service
+account (it just needs `objectAdmin` on both buckets — same HMAC key works for
+either), CORS scoped to localhost only:
+
+```sh
+gcloud storage buckets create gs://$BUCKET-dev \
+  --project=$PROJECT --location=us --uniform-bucket-level-access
+
+gcloud storage buckets add-iam-policy-binding gs://$BUCKET-dev \
+  --member=serviceAccount:openbean-photos@$PROJECT.iam.gserviceaccount.com \
+  --role=roles/storage.objectAdmin
+
+gcloud storage buckets update gs://$BUCKET-dev --cors-file=packages/server/bucket-cors.dev.json
+```
+
+Point `packages/server/.env` → `S3_BUCKET` at `$BUCKET-dev`, reusing the same
+`S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`.
+
 CORS — edit the production origin in `packages/server/bucket-cors.json` first,
 keep the two localhost entries or dev uploads break:
 
